@@ -1,0 +1,254 @@
+
+LogP/MPI
+--------
+
+The LogP/MPI code in this directory is a supplement to the paper
+	"Fast Measurement of LogP Parameters for Message Passing Platforms"
+by Thilo Kielmann, Henri E. Bal and Kees Verstoep.
+The paper is available from <http://www.cs.vu.nl/albatross>.
+
+
+Building LogP/MPI
+-----------------
+
+To build the LogP/MPI library liblogp.a and the logp_test program,
+first have a look at the supplied Makefile.
+You may have to change the definitions of the following variables
+to be consistent with your system:  MPICC, CFLAGS, LDOPTS, MPI_LIB_DIR
+and/or RANLIB.  Typing "make" should then result in both liblogp.a and
+logp_test.  If it doesn't, try to consult your local MPI expert first.
+
+
+Using the code
+--------------
+
+The best way to make use of this code is probably first to experiment
+with the included example program "logp_test".  It is actually little
+more than a test driver for the logp_mpi module.  Almost all of the
+parameters to the LogP/MPI module (the MPI send and receive mode,
+message size range, desired precision, etc.) can be specified on the
+command line.
+
+For example, on our system the following script ("logp_test_prun"):
+--
+#!/bin/sh
+
+SENDMETHODS="Send Isend Ssend"
+RECVMETHODS="Recv Irecv"
+
+for send in $SENDMETHODS; do
+    for recv in $RECVMETHODS; do
+	outfile="logp_test.out.$send.$recv"
+	echo Generating $outfile
+	prun logp_test 2 -$send -$recv -verbose -o $outfile
+    done
+done
+--
+generates LogP parameter files for several MPI send/receive primitives
+(replace "prun logp_test 2" by whatever is required on your site
+to start the program on two nodes).
+
+The parameter files can then be plotted using the logp_plot script.
+This script by default assumes that it needs to plot logp_test
+output files, i.e., files named "logp_test.out.$send.$recv"
+as shown above.  However, using option "-f <file>" a different
+file with logp statistics can be specified; the output will
+go to "<file>.eps".
+Furthermore, option "-c" forces logp_plot to draw the confidence
+intervals using gplot's "error bars".
+Option "-n" forces the plotting of graphs with plain averages,
+as was done for the paper (this is also the default).
+
+
+Here is a snapshot of some possible verbose output:
+---------
+$ prun logp_test 2 -Send -Recv -verbose
+0: measuring with peer 1
+1: mirroring peer 0
+Clock overhead is 0.755 usec
+0: g(0)/pipeline
+0: runs = 10: tot_time 107.8 incr 0.0% RTT 42.0 g_avg 5.2 diff 0.0%
+0: runs = 20: tot_time 216.5 incr 100.9% RTT 42.0 g_avg 8.6 diff 63.9%
+0: runs = 40: tot_time 313.6 incr 44.9% RTT 42.0 g_avg 5.0 diff -42.1%
+0: runs = 80: tot_time 638.2 incr 103.5% RTT 42.0 g_avg 6.6 diff 32.4%
+0: runs = 160: tot_time 1294.2 incr 102.8% RTT 42.0 g_avg 6.1 diff -7.2%
+0: runs = 320: tot_time 2485.7 incr 92.1% RTT 42.0 g_avg 6.7 diff 9.0%
+0: runs = 640: tot_time 4533.6 incr 82.4% RTT 42.0 g_avg 6.7 diff -0.3%
+0: runs = 1280: tot_time 10027.2 incr 121.2% RTT 42.0 g_avg 7.6 diff 13.9%
+0: runs = 2560: tot_time 20117.8 incr 100.6% RTT 42.0 g_avg 7.7 diff 1.8%
+0: Measuring g(0) took 0.05 sec
+0:       0: os 0.0000059 [ 3] or 0.0000094 [ 6]  g 0.0000077 or > g! L = 0.0000012
+0:       1: os 0.0000062 [ 9] or 0.0000111 [72]  g 0.0000083 or > g!
+0:       2: os 0.0000062 [ 9] or 0.0000103 [ 3]  g 0.0000085 or > g!
+0:       4: os 0.0000061 [ 9] or 0.0000101 [ 3]  g 0.0000070 or > g!
+0:       8: os 0.0000060 [ 3] or 0.0000100 [ 3]  g 0.0000078 or > g!
+0:      16: os 0.0000062 [ 6] or 0.0000102 [ 3]  g 0.0000089 or > g!
+0:      32: os 0.0000062 [ 9] or 0.0000103 [ 3]  g 0.0000091 or > g!
+0:      64: os 0.0000087 [72] or 0.0000106 [ 3]  g 0.0000126
+0:     128: os 0.0000073 [ 9] or 0.0000133 [72]  g 0.0000125 or > g!
+0:     256: os 0.0000088 [12] or 0.0000127 [ 9]  g 0.0000185
+0:     512: os 0.0000119 [72] or 0.0000138 [ 9]  g 0.0000273
+0:    1024: os 0.0000197 [ 3] or 0.0000198 [30]  g 0.0000443
+0:    2048: os 0.0000382 [36] or 0.0000300 [ 3]  g 0.0000692
+0:    4096: os 0.0000657 [36] or 0.0000487 [36]  g 0.0000994
+0:    8192: os 0.0001136 [ 6] or 0.0001069 [ 6]  g 0.0001587
+0:   16384: os 0.0002394 [36] or 0.0002348 [ 3]  g 0.0003112
+0:   32768: os 0.0004721 [36] or 0.0005076 [ 3]  g 0.0006069
+0:   65536: os 0.0009387 [18] or 0.0010417 [ 9]  g 0.0011332
+0:  131072: os 0.0019539 [18] or 0.0023197 [18]  g 0.0025026
+0:  262144: os 0.0062772 [18] or 0.0066766 [12]  g 0.0069494
+0:+      4: g  0.0000070 (-22.0%)
+0:+      8: g  0.0000078 (99.9%)
+0:+     64: os 0.0000087 (36.9%) g  0.0000126 (32.7%)
+0:+    128: os 0.0000073 (-45.9%) g  0.0000125 (-35.7%)
+0:      96: os 0.0000071 [15] or 0.0000118 [72]  g 0.0000113 or > g!
+0:+     96: os 0.0000071 (-35.7%) g  0.0000113 (-29.4%)
+0:+    128: os 0.0000073 (30.6%) g  0.0000125 (24.6%)
+0:+    256: or 0.0000127 (-33.6%) 
+0:     192: os 0.0000102 [72] or 0.0000119 [ 3]  g 0.0000201
+[..]
+------------
+
+A number of remarks about this output:
+
+- All units are in seconds, unless specified otherwise
+
+- The length of the g(0) pipeline measurements is doubled (!)
+  until the g_avg being measured stabilizes according to a few
+  criteria (see the paper for details).
+  This really only works well for networks that are reasonably
+  predicatable in their throughput performance.  For an MPI
+  implementation running over somewhat busy network it is probably
+  advisable to increase the "eps" parameter (using -eps, default
+  value is 3%) in order to shorten the running time of this fase.
+  We are considering alternative ways to improve this.
+
+- As described in the paper, by default we only flood the network
+  with messages of size 0.  To see the effects of using flooding for
+  all message sizes, specify "-flood".  Apart from making the probes
+  much more intrusive to the network, it also makes them slower.
+  This is very noticable on slower (e.g., wide area) networks.
+
+- For the measurement of the send ("os") and receive ("or") overheads
+  the amount of roundtrips used to achieve the requested confidence
+  interval is printed in "[]" comments (e.g., for size 0,
+  "os" required 3 and "or" required 6 roundtrips).
+
+- In comments at the end of the lines, a few unexpected relations
+  between the performance measures are shown. E.g., for any size,
+  normally neither "os" nor "or" should be greater than "g",
+  since "g" is supposed to capture any overhead.  However, due
+  to measurement inaccuracies, network variation, caching effects,
+  etc., this can sometimes happen during logp_mpi runs.
+
+- After the "os" and "or" runs for messages of size 2^k, logp_mpi
+  starts to investigate possible non-linear behavior as described
+  in section "Algorithms used" below.  For example, for size 4
+  and 8 bytes it does find a nonlinearity, but these sizes are
+  considered so close that it desides to leave them as is.  However,
+  size 96 bytes is investigate additionally since "os" and "g" for
+  128 are sufficiently different from what could be expected by
+  extrapolating from size 32 and 64.  Similarly for size 192 bytes.
+
+- The maximum amount of "os"/"or" roundtrip measurements performed
+  depends on the size.  The default value for this "max-its" parameter
+  is 18.  For messages of 1K or smaller "max-its" is automatically
+  multiplied a factor of 4, and for messages up to 64 KByte "max-its"
+  is multiplied by 2.  The base value of "max-its" can be changed
+  by means of the "-max-its" parameter to logp_test.
+
+- Depending on your platform, it may also be useful to decrease the
+  range of message sizes over which the measurements are performed
+  (parameters "-min-size" and "-max-size").
+
+- When working on networks that show a significant amount of
+  variability, it has proven to be useful to experiment with the
+  following parameters:
+  -eps <eps>:	   increasing <eps> allows larger variability, e.g.,
+		   you can try <eps>=0.10 to get 10% instead of 3%.
+  -conf-int <cnf>: changes the confidence interval requested,
+		   e.g., you could try <cnf>=0.8 to get a 80%
+		   confidence interval instead of the default 90%.
+		   On the other hand, on a dedicated network which
+		   is completely unloaded you could try setting
+		   <cnf>=0.95, to obtain 95% confidence intervals.
+  -max-diff <df>:  changes the allowed change when investigating
+		   nonlinearity, e.g. 0.5 means that jumps up to
+		   50% off the expected value are not investigated.
+
+There is no extensive documentation for the logp_mpi module at the moment.
+If you want to deploy the current code within a larger framework
+(e.g., for optimizing the communication paths of an application
+at runtime) we suggest you first have a close look at logp_mpi.h
+and the way logp_test.c makes use of the interfaces.
+
+If you have any questions, feel free to contact us!
+
+Thilo Kielmann (kielmann@cs.vu.nl)
+Kees Verstoep (versto@cs.vu.nl)
+
+
+Limitations
+-----------
+
+Please note that this is a third snapshot of work in progress.
+To improve the statistical underpinning of the values estimated,
+we have introduced confidence-intervals that give a better
+indication of the performance measures compared to plain averages.
+For other limitations, assumptions, and background of the code in
+general, see the paper.
+
+
+Algorithms used
+---------------
+
+Here is a quick overview of the algorithms LogP/MPI uses to adapt
+the underlying network (the Figures referred to are in the paper
+mentioned).
+
+We start by measuring g(0) (Figure 1, left) using a saturation test.
+The procedure starts by measuring the time required for sending a
+certain amount (200) of messages in a row.
+The amount of messages is doubled until the throughput changes
+by only a minimal amount (1%).  At that point the pipeline is
+should be completely full and saturation is reached.
+
+One danger is that the underlying network stores an excessive number
+of packets at the sending side, since this could defeat this procedure.
+The initial number of message would have to be increased significantly
+in such cases.  We work around this by making the throughput test
+synchronous, i.e., we wait for an acknowledgement from the receiver
+after sending the last packet.
+
+All other measurements are based on the roundtrip tests as shown in
+Figure 1 (right).  We start by measuring the roundtrip (with and without
+the delta waiting time) for all sizes of 2^k bytes, with k in [0, k_max].
+Value k_max should be chosen high enough, so that any nonlinear effect
+in communication can be identified.  In our tests we used k_max = 18.
+
+For any size, the roundtrip tests are first run a small number of times.
+As long as the variance is too high, we keep doing more roundtrip
+measurement.  We keep on doing this until the width of the
+confidence interval is less than a fraction (default 2 * eps, so 6%)
+of the value being investigated, or until an upperbound on the total
+number of iterations is reached (72 for small messages, 18 for large ones).
+By default, 90%-confidence intervals are used, but this can be changed
+as needed.  From the roudtrip times and g(0), the values for or(m),
+os(m) and g(m) are determined as described earlier.
+
+Next we check that the per-byte overhead (g(m) / m) has stabilized
+for large m.  If this is not yet the case, it is possible that sending
+larger messages allows a greater throughput to be gained.
+To find that out increment k_max and redo the performance test
+for that size.  We stop when g(k_max) is close to the value
+extrapolated from g(2 ^ (k_max - 2)) and g(2 ^ (k_max - 1)).
+
+Finally we start looking for possible non-linear behavior.
+For any size m, we check that the values in the derived values
+or(m), os(m) and g(m) are consistent with the values for the next
+two lower sizes, m1 and m2.
+We do this by comparing the values for size m with an extrapolation
+based on the values for m1 and m2.
+If the relative difference is higher than 3%, we do new measurements
+for size (m2 + m) / 2, and repeat the non-linearity procedure
+(unless m2 and m only differ by max(32, eps * m2) bytes).

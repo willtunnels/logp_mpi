@@ -1,0 +1,13 @@
+#!/bin/sh
+
+SENDMETHODS="Send Isend Ssend"
+RECVMETHODS="Recv Irecv"
+
+for send in $SENDMETHODS; do
+    for recv in $RECVMETHODS; do
+	outfile="logp_test.out.$send.$recv"
+	echo Generating $outfile
+	prun -sge-script /usr/local/sitedep/reserve.sge/sge-script -1 `pwd`/logp_test 2 -$send -$recv -verbose -o $outfile
+	#mpirun -np 2 `pwd`/logp_test -$send -$recv -verbose -o $outfile
+    done
+done

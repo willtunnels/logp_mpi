@@ -1,0 +1,106 @@
+#!/bin/sh
+
+statfiles=""
+confint=no
+
+while [ $# -gt 0 ]; do
+    case $1 in
+    -f) statfiles="$statfiles $2"; shift;;
+    -c) confint=yes;;
+    -n) confint=no;;
+    *)  echo "$0: unknown parameter $1" >&2; exit 1;;
+    esac
+    shift
+done
+
+GNUPLOT=gnuplot
+
+AWK=awk
+ECHO=echo
+GREP=grep
+HEAD=head
+SED=sed
+SORT=sort
+TAIL=tail
+
+TMP=/tmp/gp$$
+
+if [ "X$statfiles" = "X" ]; then
+    # by default assume we need to print all logp_test output files
+    for OPO in NONE GM_DIRECT; do
+	for OPS in Isend Send Ssend; do
+	    for OPR in Recv Irecv; do
+		if [ "$OPO" = NONE ]; then
+		    OP="$OPS.$OPR"
+		else
+		    OP="$OPS.$OPR.$OPO"
+		fi
+		statfiles="$statfiles logp_test.out.$OP"
+	    done
+	done
+    done
+fi
+
+for INFILE in $statfiles; do
+
+if [ ! -f $INFILE ]; then
+	continue
+fi
+
+OUTFILE="$INFILE.eps"
+NAME="$INFILE"
+
+# Find boundaries of the graph: times and length
+MIN_TIME=`$GREP -v ^\# $INFILE |
+            $AWK 'BEGIN { min = 9e9 }
+			{ if ($3 < min) min = $3;
+			  if ($6 < min) min = $6;
+			  if ($9 < min) min = $9;
+			}
+                 END    { usec = min * 1000000 / 2;
+			  if (usec < 1.0) usec = 0.1;
+			  printf "%.1f\n", usec;
+			}'`
+MAX_TIME=`$TAIL -1 $INFILE | $AWK '{ print $6 }'`
+MIN_LEN=`$GREP -v ^\# $INFILE |
+           $AWK 'BEGIN { min = 9e9 }
+                       { size = $2; if (size < min) min = size; }
+                 END   { if (min < 1) min = 1; printf "%d\n", min }'`
+MAX_LEN=`$TAIL -1 $INFILE | $AWK '{ print $2 }'`
+
+cat > $TMP << --EOF--
+set terminal postscript eps "Helvetica" 17
+set output "$OUTFILE"
+set size 0.75 , 0.75
+set logscale x
+set logscale y
+set grid
+set key left top
+set xlabel "message size (bytes)"
+set ylabel "microseconds"
+set title "$NAME"
+set ytics 1, 10
+--EOF--
+if [ "$confint" = yes ]; then
+cat >> $TMP << --EOF--
+plot [$MIN_LEN:$MAX_LEN][$MIN_TIME:($MAX_TIME*1E6)] \\
+    "$INFILE" using 2:(\$3*1E6) title "os" with lines 1, \\
+    "$INFILE" using 2:(\$3*1E6):(\$4*1E6):(\$3*1E6+\$5*1E6) title "" with yerrorbars, \\
+    "$INFILE" using 2:(\$6*1E6) title "or" with lines 2, \\
+    "$INFILE" using 2:(\$6*1E6):(\$7*1E6):(\$6*1E6+\$8*1E6) title "" with yerrorbars, \\
+    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints 4 6
+--EOF--
+else
+cat >> $TMP << --EOF--
+plot [$MIN_LEN:$MAX_LEN][$MIN_TIME:($MAX_TIME*1E6)] \\
+    "$INFILE" using 2:(\$3*1E6) title "os" with linespoints 1, \\
+    "$INFILE" using 2:(\$6*1E6) title "or" with linespoints 2, \\
+    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints 4 6
+--EOF--
+fi
+
+$GNUPLOT $TMP
+
+done
+
+rm -f $TMP
