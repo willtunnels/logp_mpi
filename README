@@ -3,10 +3,10 @@ Note
 
 This code was somewhat hard to track down, though I eventually found it at
 <https://www.cs.vu.nl/pub/kielmann>. It seemed worth preserving in an
-accessible place, so I made this repository. The code is without modification
-save for this portion of the README. Many of the links from the original paper
-and in this repository are now dead. The paper can currently be found at
-<https://www.cs.vu.nl/~kielmann/papers/rtspp00.pdf>.
+accessible place, so I made this repository. Many of the links from the
+original paper and in this repository are now dead. The paper can currently be
+found at
+<https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.77.7328&rep=rep1&type=pdf>.
 
 Citation:
 
@@ -14,6 +14,8 @@ Thilo Kielmann, Henri E. Bal, and Kees Verstoep. 2000. Fast Measurement of LogP
 Parameters for Message Passing Platforms. In Proceedings of the 15 IPDPS 2000
 Workshops on Parallel and Distributed Processing (IPDPS '00), José D. P. Rolim
 (Ed.). Springer-Verlag, London, UK, UK, 1176-1183.
+
+Below is the original content of the README:
 
 LogP/MPI
 --------
