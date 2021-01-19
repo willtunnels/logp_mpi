@@ -84,18 +84,18 @@ set ytics 1, 10
 if [ "$confint" = yes ]; then
 cat >> $TMP << --EOF--
 plot [$MIN_LEN:$MAX_LEN][$MIN_TIME:($MAX_TIME*1E6)] \\
-    "$INFILE" using 2:(\$3*1E6) title "os" with lines 1, \\
+    "$INFILE" using 2:(\$3*1E6) title "os" with lines lt 1, \\
     "$INFILE" using 2:(\$3*1E6):(\$4*1E6):(\$3*1E6+\$5*1E6) title "" with yerrorbars, \\
-    "$INFILE" using 2:(\$6*1E6) title "or" with lines 2, \\
+    "$INFILE" using 2:(\$6*1E6) title "or" with lines lt 2, \\
     "$INFILE" using 2:(\$6*1E6):(\$7*1E6):(\$6*1E6+\$8*1E6) title "" with yerrorbars, \\
-    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints 4 6
+    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints lt 3
 --EOF--
 else
 cat >> $TMP << --EOF--
 plot [$MIN_LEN:$MAX_LEN][$MIN_TIME:($MAX_TIME*1E6)] \\
-    "$INFILE" using 2:(\$3*1E6) title "os" with linespoints 1, \\
-    "$INFILE" using 2:(\$6*1E6) title "or" with linespoints 2, \\
-    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints 4 6
+    "$INFILE" using 2:(\$3*1E6) title "os" with linespoints lt 1 pt 1, \\
+    "$INFILE" using 2:(\$6*1E6) title "or" with linespoints lt 2 pt 4, \\
+    "$INFILE" using 2:(\$9*1E6) title "g"  with linespoints lt 3 pt 8
 --EOF--
 fi
 
